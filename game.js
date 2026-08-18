@@ -1,8 +1,5 @@
 'use strict';
 
-// -------------------------------------------------------------
-// SEEDED PSEUDO-RANDOM GENERATOR & HELPERS
-// -------------------------------------------------------------
 function mulberry32(a) {
   return function() {
     a |= 0; a = a + 0x6D2B79F5 | 0;
@@ -23,16 +20,13 @@ function stringToSeed(s) {
 
 const clampValue = v => Math.max(0, Math.min(100, Math.round(v)));
 
-// -------------------------------------------------------------
-// APP GLOBAL STATE & LOCAL STORAGE
-// -------------------------------------------------------------
 let APP_STATE = {
   screen: 'home',
   phase: 'event',
   showTeacher: false,
   selectedZone: null,
   turnsTotal: 10,
-  reading: '??',
+  reading: '標準',
   seed: 'langqiao-01',
   savedGame: null,
   g: null,
@@ -65,11 +59,11 @@ function computeCells(value, color) {
 
 function getTrendSummary(start, current) {
   const diff = current - start;
-  if (diff >= 10) return '?? ????';
-  if (diff > 0)   return '? ????';
-  if (diff === 0) return '? ??';
-  if (diff > -10) return '? ????';
-  return '?? ????';
+  if (diff >= 10) return '📈 大幅增加';
+  if (diff > 0)   return '↑ 稍微增加';
+  if (diff === 0) return '→ 持平';
+  if (diff > -10) return '↓ 稍微減少';
+  return '📉 大幅減少';
 }
 
 function applyConflictStageChange(g, stageDelta) {
@@ -89,9 +83,6 @@ function applyConflictStageChange(g, stageDelta) {
   });
 }
 
-// -------------------------------------------------------------
-// GAMEPLAY LOGIC & FLOW
-// -------------------------------------------------------------
 function startNewGameSession(roleId) {
   const role = ROLES.find(r => r.id === roleId);
   const rel = {};
@@ -157,13 +148,13 @@ function runTurnStart(g) {
 
 function drawNextEvent(g) {
   const maxStage = Math.max(...Object.keys(g.rel).map(k => g.rel[k].stage), 0);
-  const eligible = EVENTS_DATA.filter(e =>
+  const eligible = EVENTS.filter(e =>
     g.used.indexOf(e.id) < 0 &&
     (!e.minTurn || g.turn >= e.minTurn) &&
     (!e.minStage || maxStage >= e.minStage)
   );
 
-  const pool = eligible.length ? eligible : EVENTS_DATA.filter(e => !e.minStage && !e.minTurn);
+  const pool = eligible.length ? eligible : EVENTS.filter(e => !e.minStage && !e.minTurn);
   const rng = mulberry32(stringToSeed(g.seed + ':' + g.turn))();
   const totalWeight = pool.reduce((acc, e) => acc + (e.weight || 3), 0);
   let needle = rng * totalWeight;
@@ -212,7 +203,7 @@ function handleOptionChoice(ev, opt) {
   if (opt.delay) {
     g.scheduled = g.scheduled.concat([{
       turn: g.turn + opt.delay.after,
-      text: '? ' + g.turn + ' ?????' + opt.delay.text,
+      text: '第 ' + g.turn + ' 回的決定：' + opt.delay.text,
       res: opt.delay.res,
       rel: opt.delay.rel,
       stage: opt.delay.stage
@@ -278,14 +269,11 @@ function handleReconsiderOption() {
 
 function determineFinalEnding() {
   const g = APP_STATE.g;
-  if (!g) return ENDINGS_DATA[ENDINGS_DATA.length - 1];
+  if (!g) return ENDINGS[ENDINGS.length - 1];
   const maxStage = Math.max(...Object.keys(g.rel).map(k => g.rel[k].stage), 0);
-  return ENDINGS_DATA.find(e => e.test(g, g.agreements, maxStage)) || ENDINGS_DATA[ENDINGS_DATA.length - 1];
+  return ENDINGS.find(e => e.test(g, g.agreements, maxStage)) || ENDINGS[ENDINGS.length - 1];
 }
 
-// -------------------------------------------------------------
-// UI RENDERERS
-// -------------------------------------------------------------
 function switchScreen(screenId) {
   document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
   const target = document.getElementById('screen-' + screenId);
@@ -312,28 +300,26 @@ function renderHomeScreen() {
   if (saved) {
     continueBtn.disabled = false;
     const role = ROLES.find(r => r.id === saved.roleId);
-    continueBtn.textContent = '?? ???' + (role ? role.name : '') + ' ? ' + saved.turn + '?';
+    continueBtn.textContent = '💾 繼續（' + (role ? role.name : '') + ' 回 ' + saved.turn + '）';
     APP_STATE.savedGame = saved;
   } else {
     continueBtn.disabled = true;
-    continueBtn.textContent = '?? ????';
+    continueBtn.textContent = '💾 沒有存檔';
   }
 
-  // Teacher settings turn buttons
   const turnContainer = document.getElementById('turn-options-group');
   turnContainer.innerHTML = '';
   [6, 10, 12].forEach(num => {
     const btn = document.createElement('button');
     btn.className = 'btn-toggle ' + (APP_STATE.turnsTotal === num ? 'active' : 'inactive');
-    btn.textContent = num + ' ?';
+    btn.textContent = num + ' 回';
     btn.onclick = () => { APP_STATE.turnsTotal = num; renderHomeScreen(); };
     turnContainer.appendChild(btn);
   });
 
-  // Teacher reading buttons
   const readContainer = document.getElementById('read-options-group');
   readContainer.innerHTML = '';
-  ['??', '??'].forEach(mode => {
+  ['簡短', '標準'].forEach(mode => {
     const btn = document.createElement('button');
     btn.className = 'btn-toggle ' + (APP_STATE.reading === mode ? 'active' : 'inactive');
     btn.textContent = mode;
@@ -348,11 +334,12 @@ function renderRoleSelectionScreen() {
   const container = document.getElementById('role-cards-container');
   container.innerHTML = '';
 
+  const coreList = ['food', 'water', 'labor', 'support'];
   ROLES.forEach(r => {
     const card = document.createElement('div');
     card.className = 'role-card';
 
-    const startSummary = CORE_RESOURCES.map(k => ({
+    const startSummary = coreList.map(k => ({
       glyph: RES_META[k].g,
       text: Math.round(r.res[k] / 20) + '/5'
     }));
@@ -366,14 +353,14 @@ function renderRoleSelectionScreen() {
       <div class="role-body">
         <div class="role-name">${r.name}</div>
         <div class="role-traits">
-          <div class="role-trait-row"><span class="role-trait-icon">??</span><span>${r.advantage}</span></div>
-          <div class="role-trait-row"><span class="role-trait-icon">??</span><span>${r.limit}</span></div>
-          <div class="role-trait-row"><span class="role-trait-icon">??</span><span>${r.actions}</span></div>
+          <div class="role-trait-row"><span class="role-trait-icon">💪</span><span>${r.advantage}</span></div>
+          <div class="role-trait-row"><span class="role-trait-icon">😣</span><span>${r.limit}</span></div>
+          <div class="role-trait-row"><span class="role-trait-icon">🧰</span><span>${r.actions}</span></div>
         </div>
         <div class="role-res-summary">
           ${startSummary.map(s => `<span class="role-res-pill">${s.glyph} ${s.text}</span>`).join('')}
         </div>
-        <button class="btn-select-role" data-role-id="${r.id}">??????</button>
+        <button class="btn-select-role" data-role-id="${r.id}">我要當這個人</button>
       </div>
     `;
 
@@ -387,17 +374,16 @@ function renderGameScreen() {
   if (!g) return;
 
   const role = ROLES.find(r => r.id === g.roleId);
-  const ev = g.eventId ? EVENTS_DATA.find(e => e.id === g.eventId) : null;
+  const ev = g.eventId ? EVENTS.find(e => e.id === g.eventId) : null;
 
   renderMapWorldBackground(g, ev);
 
-  // Top Status Bar
   document.getElementById('hud-role-name').textContent = role ? role.name : '';
-  document.getElementById('hud-turn-info').textContent = `? ${g.turn} / ${g.turnsTotal} ? ? ${SEASONS_LIST[(g.turn - 1) % 4]}?`;
+  document.getElementById('hud-turn-info').textContent = `第 ${g.turn} / ${g.turnsTotal} 回 · ${SEASONS[(g.turn - 1) % 4]}天`;
 
-  const coreList = document.getElementById('hud-core-resources');
-  coreList.innerHTML = '';
-  CORE_RESOURCES.forEach(k => {
+  const coreListEl = document.getElementById('hud-core-resources');
+  coreListEl.innerHTML = '';
+  ['food', 'water', 'labor', 'support'].forEach(k => {
     const meta = RES_META[k];
     const val = g.res[k];
     const item = document.createElement('div');
@@ -411,17 +397,16 @@ function renderGameScreen() {
         </div>
       </div>
     `;
-    coreList.appendChild(item);
+    coreListEl.appendChild(item);
   });
 
-  // Left Status Chips
   const leftChips = document.getElementById('hud-left-status-chips');
   leftChips.innerHTML = '';
   const chipDefinitions = [
-    { g: '??', label: '??', val: g.res.forest >= 60 ? '??' : g.res.forest >= 35 ? '???' : '???', col: g.res.forest >= 35 ? '#3f8f5b' : '#d4552b' },
-    { g: '??', label: '??', val: g.res.soil >= 60 ? '??' : g.res.soil >= 35 ? '??' : '???', col: g.res.soil >= 35 ? '#3f8f5b' : '#d4552b' },
-    { g: '???', label: '??', val: g.res.security >= 60 ? '??' : g.res.security >= 35 ? '???' : '???', col: g.res.security >= 35 ? '#3f8f5b' : '#d4552b' },
-    { g: '??', label: '????', val: g.res.pressure >= 65 ? '??' : g.res.pressure >= 40 ? '???' : '??', col: g.res.pressure >= 40 ? '#d4552b' : '#3f8f5b' }
+    { g: '🌳', label: '山林', val: g.res.forest >= 60 ? '茂密' : g.res.forest >= 35 ? '變少了' : '快沒了', col: g.res.forest >= 35 ? '#3f8f5b' : '#d4552b' },
+    { g: '🌱', label: '田地', val: g.res.soil >= 60 ? '肥沃' : g.res.soil >= 35 ? '普通' : '變差了', col: g.res.soil >= 35 ? '#3f8f5b' : '#d4552b' },
+    { g: '🛡️', label: '平安', val: g.res.security >= 60 ? '安穩' : g.res.security >= 35 ? '要小心' : '很危險', col: g.res.security >= 35 ? '#3f8f5b' : '#d4552b' },
+    { g: '⚠️', label: '外來壓力', val: g.res.pressure >= 65 ? '很大' : g.res.pressure >= 40 ? '有一點' : '還好', col: g.res.pressure >= 40 ? '#d4552b' : '#3f8f5b' }
   ];
   chipDefinitions.forEach(c => {
     const chip = document.createElement('div');
@@ -436,10 +421,8 @@ function renderGameScreen() {
     leftChips.appendChild(chip);
   });
 
-  // Right Event Panel
   renderRightEventPanel(g, ev);
 
-  // Options vs. Feedback Modal
   if (APP_STATE.phase === 'event') {
     document.getElementById('bottom-options-bar').style.display = 'flex';
     document.getElementById('feedback-modal-overlay').style.display = 'none';
@@ -450,15 +433,12 @@ function renderGameScreen() {
     renderFeedbackModal(g);
   }
 
-  // Zone details popup if selected
   renderZoneDetailPopup();
 }
 
 function renderMapWorldBackground(g, ev) {
-  // River height responsive to water
   document.getElementById('river').style.height = Math.max(14, 14 + g.res.water * 0.12).toFixed(0) + 'px';
 
-  // Trees
   const treeBox = document.getElementById('world-trees-container');
   treeBox.innerHTML = '';
   const rng = mulberry32(stringToSeed(g.seed + ':world'));
@@ -467,11 +447,10 @@ function renderMapWorldBackground(g, ev) {
     const d = document.createElement('div');
     d.className = 'world-deco';
     d.style.cssText = `left:${(4 + rng() * 88).toFixed(1)}%; top:${(48 + rng() * 46).toFixed(1)}%; font-size:${(22 + rng() * 20).toFixed(0)}px;`;
-    d.textContent = '??';
+    d.textContent = '🌳';
     treeBox.appendChild(d);
   }
 
-  // Fields
   const fieldBox = document.getElementById('world-fields-container');
   fieldBox.innerHTML = '';
   const fieldCount = Math.round(g.res.soil / 12);
@@ -483,10 +462,9 @@ function renderMapWorldBackground(g, ev) {
     fieldBox.appendChild(d);
   }
 
-  // Interactive Nodes
   const nodesBox = document.getElementById('map-nodes-container');
   nodesBox.innerHTML = '';
-  ZONES_DATA.forEach(z => {
+  ZONES.forEach(z => {
     const isFocus = ev && ev.zone === z.id;
     const isSelected = APP_STATE.selectedZone === z.id;
     const btn = document.createElement('button');
@@ -499,7 +477,7 @@ function renderMapWorldBackground(g, ev) {
 
     const ringColor = isFocus ? '#e0492c' : isSelected ? '#3a72b0' : '#ffffff';
     btn.innerHTML = `
-      ${isFocus ? '<span class="node-badge">?????</span>' : ''}
+      ${isFocus ? '<span class="node-badge">❗這裡有事</span>' : ''}
       <span class="node-circle" style="border-color:${ringColor};">${z.glyph}</span>
       ${(isFocus || isSelected) ? `<span class="node-name-label">${z.name}</span>` : ''}
     `;
@@ -513,14 +491,13 @@ function renderMapWorldBackground(g, ev) {
 }
 
 function renderRightEventPanel(g, ev) {
-  // Delayed consequence alerts
   const delayBox = document.getElementById('hud-delayed-notice-box');
   delayBox.innerHTML = '';
   if (g.notes && g.notes.length) {
     const alertDiv = document.createElement('div');
     alertDiv.className = 'delay-notice-box';
     alertDiv.innerHTML = `
-      <span class="delay-notice-title">? ?????????</span>
+      <span class="delay-notice-title">⏳ 上次決定的後果來了</span>
       ${g.notes.map(d => `<span class="delay-notice-text">${d}</span>`).join('')}
     `;
     delayBox.appendChild(alertDiv);
@@ -528,30 +505,26 @@ function renderRightEventPanel(g, ev) {
 
   if (!ev) return;
 
-  // Category and truth status pills
-  const statusMeta = STATUS_META[ev.status] || { label: '??', bg: '#eee', fg: '#333' };
+  const statusMeta = STATUS_META[ev.status] || { label: '未知', bg: '#eee', fg: '#333' };
   document.getElementById('hud-ev-tags').innerHTML = `
     <span class="ev-cat-pill">${ev.cat}</span>
     <span class="ev-status-pill" style="background:${statusMeta.bg}; color:${statusMeta.fg};">${statusMeta.label}</span>
   `;
 
-  // Scene illustration box
-  const icons = SCENE_ICONS[ev.cat] || ['??', '??', '??'];
+  const icons = SCENE[ev.cat] || ['📍', '📍', '📍'];
   const sceneEl = document.getElementById('hud-ev-scene');
-  sceneEl.style.background = SCENE_GRADIENTS[ev.cat] || '#eee';
+  sceneEl.style.background = SCENE_BG[ev.cat] || '#eee';
   sceneEl.innerHTML = icons.map((e, i) => `<span style="font-size:${i === 1 ? '44px' : '34px'}; line-height:1;">${e}</span>`).join('');
 
   document.getElementById('hud-ev-title').textContent = ev.title;
-  document.getElementById('hud-ev-body').textContent = APP_STATE.reading === '??' ? (ev.body.substring(0, 68) + '?') : ev.body;
+  document.getElementById('hud-ev-body').textContent = APP_STATE.reading === '簡短' ? (ev.body.substring(0, 68) + '…') : ev.body;
 
-  // Known, Unknown, Affected Parties info
   document.getElementById('hud-ev-info-card').innerHTML = `
-    <div class="ev-info-line"><span class="ev-info-icon">??</span><span>${ev.known}</span></div>
-    <div class="ev-info-line"><span class="ev-info-icon">?</span><span>${ev.unknown}</span></div>
-    <div class="ev-info-line"><span class="ev-info-icon">??</span><span>${ev.affected}</span></div>
+    <div class="ev-info-line"><span class="ev-info-icon">👀</span><span>${ev.known}</span></div>
+    <div class="ev-info-line"><span class="ev-info-icon">❓</span><span>${ev.unknown}</span></div>
+    <div class="ev-info-line"><span class="ev-info-icon">👥</span><span>${ev.affected}</span></div>
   `;
 
-  // Relationship Matrix
   const relList = document.getElementById('hud-relations-list');
   relList.innerHTML = '';
   Object.keys(g.rel).forEach(k => {
@@ -564,7 +537,7 @@ function renderRightEventPanel(g, ev) {
     row.innerHTML = `
       <div class="rel-faction-avatar" style="background:${FACTION_COLOR[k]};">
         ${FACTION_GLYPH[k]}
-        <span class="rel-faction-mood">${getMoodEmoji(r.trust)}</span>
+        <span class="rel-faction-mood">${MOOD(r.trust)}</span>
       </div>
       <span class="rel-faction-name">${FACTIONS[k]}</span>
       <div class="rel-stage-bars">${bars}</div>
@@ -592,7 +565,7 @@ function renderEventOptionsBar(g, ev) {
         if (!meta) return;
         chips.push({
           glyph: meta.g,
-          sign: delta > 0 ? ('?' + delta) : ('?' + Math.abs(delta)),
+          sign: delta > 0 ? ('＋' + delta) : ('－' + Math.abs(delta)),
           bg: delta > 0 ? '#d1f0d8' : '#fde8e8',
           fg: delta > 0 ? '#2a6a3a' : '#a31b1b'
         });
@@ -605,7 +578,7 @@ function renderEventOptionsBar(g, ev) {
       <div class="opt-chips-wrap">
         ${chips.map(c => `<span class="opt-delta-chip" style="background:${c.bg}; color:${c.fg};">${c.glyph}${c.sign}</span>`).join('')}
       </div>
-      ${isLocked ? `<span class="opt-lock-hint">?? ${opt.lockNote || '????'}</span>` : ''}
+      ${isLocked ? `<span class="opt-lock-hint">🔒 ${opt.lockNote || '條件不足'}</span>` : ''}
     `;
 
     if (!isLocked) {
@@ -621,7 +594,7 @@ function renderFeedbackModal(g) {
 
   const hasGain = fb.deltas.some(d => d.diff > 0);
   const hasLoss = fb.deltas.some(d => d.diff < 0);
-  document.getElementById('fb-modal-face').textContent = (hasGain && hasLoss) ? '??' : hasGain ? '??' : '??';
+  document.getElementById('fb-modal-face').textContent = (hasGain && hasLoss) ? '🤔' : hasGain ? '😊' : '😟';
   document.getElementById('fb-modal-choice').textContent = fb.choice;
   document.getElementById('fb-modal-narrative').textContent = fb.text;
 
@@ -634,19 +607,19 @@ function renderFeedbackModal(g) {
     chip.className = 'fb-dialog-delta-chip';
     chip.style.background = d.diff > 0 ? '#d1f0d8' : '#fde8e8';
     chip.style.color = d.diff > 0 ? '#2a6a3a' : '#a31b1b';
-    chip.innerHTML = `<span>${meta.g}</span><span>${d.diff > 0 ? ('?' + d.diff) : ('?' + Math.abs(d.diff))} ${meta.label}</span>`;
+    chip.innerHTML = `<span>${meta.g}</span><span>${d.diff > 0 ? ('＋' + d.diff) : ('－' + Math.abs(d.diff))} ${meta.label}</span>`;
     deltasBox.appendChild(chip);
   });
 
   const missedEl = document.getElementById('fb-modal-missed');
   if (fb.missed) {
     missedEl.style.display = 'block';
-    missedEl.textContent = '?? ???????' + fb.missed;
+    missedEl.textContent = '🤔 你可能沒想到：' + fb.missed;
   } else {
     missedEl.style.display = 'none';
   }
 
-  document.getElementById('btn-advance-turn').textContent = g.turn >= g.turnsTotal ? '?? ???' : '? ????';
+  document.getElementById('btn-advance-turn').textContent = g.turn >= g.turnsTotal ? '🏁 看結局' : '→ 下一回合';
   document.getElementById('btn-undo-reconsider').style.display = (!APP_STATE.reconsidered && APP_STATE.snapshot) ? 'block' : 'none';
 }
 
@@ -657,7 +630,7 @@ function renderZoneDetailPopup() {
     return;
   }
 
-  const zone = ZONES_DATA.find(z => z.id === APP_STATE.selectedZone);
+  const zone = ZONES.find(z => z.id === APP_STATE.selectedZone);
   if (!zone) {
     panel.style.display = 'none';
     return;
@@ -671,12 +644,12 @@ function renderZoneDetailPopup() {
   const list = document.getElementById('zone-rights-list');
   list.innerHTML = '';
   zone.rights.forEach(r => {
-    const icon = RIGHT_ICONS_MAP[r.type] || '??';
+    const icon = RIGHT_ICON[r.type] || '📍';
     const row = document.createElement('div');
     row.className = 'zone-right-entry';
     row.innerHTML = `
       <span class="zone-right-entry-icon">${icon}</span>
-      <span class="zone-right-entry-main"><b>${r.faction}</b>?${r.type}</span>
+      <span class="zone-right-entry-main"><b>${r.faction}</b>：${r.type}</span>
       <span class="zone-right-entry-recog">${r.recognizedBy}</span>
     `;
     list.appendChild(row);
@@ -687,14 +660,14 @@ function renderEndingScreen() {
   const ending = determineFinalEnding();
   const g = APP_STATE.g;
   document.getElementById('ending-glyph').textContent = ending.emoji;
-  document.getElementById('ending-turns-count').textContent = (g ? g.turnsTotal : 10) + ' ?????';
+  document.getElementById('ending-turns-count').textContent = (g ? g.turnsTotal : 10) + ' 回合結束了';
   document.getElementById('ending-title-head').textContent = ending.title;
   document.getElementById('ending-body-desc').textContent = ending.body;
 
   const tagsBox = document.getElementById('ending-tags-container');
   tagsBox.innerHTML = (ending.tags || []).map(t => `<span class="ending-tag-pill"><span style="font-size:18px;">${t.g}</span>${t.t}</span>`).join('');
 
-  document.getElementById('ending-reflection-prompt').textContent = '?? ????' + ending.reflect;
+  document.getElementById('ending-reflection-prompt').textContent = '💭 想一想：' + ending.reflect;
 }
 
 function renderReportScreen() {
@@ -706,10 +679,9 @@ function renderReportScreen() {
 
   document.getElementById('report-player-meta').innerHTML = `
     <div><b>${role ? role.name : ''}</b></div>
-    <div>?? ${g.code} ? ?? ${g.seed}</div>
+    <div>代號 ${g.code} ｜ 種子 ${g.seed}</div>
   `;
 
-  // Stat trends grid
   const statsGrid = document.getElementById('report-stats-grid');
   statsGrid.innerHTML = '';
   Object.keys(RES_META).forEach(k => {
@@ -726,7 +698,6 @@ function renderReportScreen() {
     statsGrid.appendChild(card);
   });
 
-  // History list
   const historyBox = document.getElementById('report-history-list');
   historyBox.innerHTML = '';
   g.history.forEach(h => {
@@ -736,25 +707,23 @@ function renderReportScreen() {
       <span class="history-turn-number">${h.turn}</span>
       <div class="history-entry-details">
         <span class="history-entry-title">${h.title}</span>
-        <span class="history-entry-choice">?? ${h.choice}</span>
+        <span class="history-entry-choice">👉 ${h.choice}</span>
         <span class="history-entry-note">${h.note}</span>
       </div>
     `;
     historyBox.appendChild(row);
   });
 
-  // Agreements & Max Conflict Stage
-  document.getElementById('report-agreements-text').innerHTML = `?? ${g.agreements.length ? g.agreements.join('?') : '????????'}`;
+  document.getElementById('report-agreements-text').innerHTML = `🤝 ${g.agreements.length ? g.agreements.join('、') : '沒有簽下任何約定'}`;
   const maxStage = Math.max(...Object.keys(g.rel).map(k => g.rel[k].stage), 0);
-  document.getElementById('report-maxstage-text').innerHTML = `?? ??????${STAGE_LABELS[maxStage] || '????'}`;
+  document.getElementById('report-maxstage-text').innerHTML = `🔥 最兇的時候：${STAGE_LABEL[maxStage] || '正常往來'}`;
 
-  // Reflections
   const refBox = document.getElementById('report-reflections-container');
   refBox.innerHTML = '';
   const questions = [
     ending.reflect,
-    '???????????????????????',
-    '????????????????????'
+    '你選擇了什麼路線？這些決定反映了哪些優先考量？',
+    '如果再來一次，你會在哪一回做不同的決定？'
   ];
   questions.forEach(q => {
     const div = document.createElement('div');
@@ -777,11 +746,7 @@ function handleExportSaveJson() {
   URL.revokeObjectURL(url);
 }
 
-// -------------------------------------------------------------
-// EVENT LISTENERS BINDING & INITIALIZATION
-// -------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
-  // Home buttons
   document.getElementById('btn-home-start').onclick = () => {
     APP_STATE.screen = 'role';
     renderApplication();
@@ -806,15 +771,13 @@ document.addEventListener('DOMContentLoaded', () => {
     APP_STATE.seed = e.target.value.trim() || 'langqiao-01';
   };
 
-  // Role screen back
   document.getElementById('btn-role-back').onclick = () => {
     APP_STATE.screen = 'home';
     renderApplication();
   };
 
-  // Game screen buttons
   document.getElementById('btn-game-to-home').onclick = () => {
-    if (confirm('??????????????????????')) {
+    if (confirm('確定要回首頁嗎？（遊戲進度已自動保存在本機）')) {
       APP_STATE.screen = 'home';
       renderApplication();
     }
@@ -828,7 +791,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-advance-turn').onclick = () => handleAdvanceNextTurn();
   document.getElementById('btn-undo-reconsider').onclick = () => handleReconsiderOption();
 
-  // Ending screen buttons
   document.getElementById('btn-view-decision-report').onclick = () => {
     APP_STATE.screen = 'report';
     renderApplication();
@@ -839,7 +801,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderApplication();
   };
 
-  // Report screen buttons
   document.getElementById('btn-print-report').onclick = () => window.print();
   document.getElementById('btn-export-save-json').onclick = () => handleExportSaveJson();
   document.getElementById('btn-report-back-home').onclick = () => {
@@ -847,7 +808,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderApplication();
   };
 
-  // Check saved game on load
   APP_STATE.savedGame = loadActiveGame();
 
   renderApplication();

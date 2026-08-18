@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>?????????????</title>
+<title>風起瑯嶠：土地、水源與生存</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -12,27 +12,27 @@
 <!-- HOME SCREEN -->
 <div id="screen-home" class="screen active">
   <div class="home-emoji-row">
-    <span>??</span><span style="font-size:42px">??</span><span style="font-size:72px">??</span><span style="font-size:42px">??</span><span>??</span><span style="font-size:42px">?</span>
+    <span>⛰️</span><span style="font-size:42px">🌳</span><span style="font-size:72px">💧</span><span style="font-size:42px">🌾</span><span>🏡</span><span style="font-size:42px">⛵</span>
   </div>
-  <h1 class="home-title">????</h1>
-  <div class="home-subtitle">????????</div>
-  <p class="home-desc">?? 150 ??????????????????????????????????</p>
+  <h1 class="home-title">風起瑯嶠</h1>
+  <div class="home-subtitle">土地、水源與生存</div>
+  <p class="home-desc">你是 150 年前恆春半島的領導者。帶大家把水引來、把田種好，還要和鄰居好好相處。</p>
   <div class="home-btns">
-    <button class="btn-primary" id="btn-home-start">? ??????</button>
-    <button class="btn-secondary" id="btn-home-continue" disabled>?? ????</button>
-    <button class="btn-ghost" id="btn-home-teacher">?? ????</button>
+    <button class="btn-primary" id="btn-home-start">▶ 開始新的一局</button>
+    <button class="btn-secondary" id="btn-home-continue" disabled>💾 沒有存檔</button>
+    <button class="btn-ghost" id="btn-home-teacher">⚙️ 老師設定</button>
   </div>
   <div id="teacher-panel-container" class="teacher-panel" style="display:none">
     <div class="teacher-sec">
-      <div class="teacher-sec-label">????</div>
+      <div class="teacher-sec-label">玩幾回合</div>
       <div class="teacher-toggle-group" id="turn-options-group"></div>
     </div>
     <div class="teacher-sec">
-      <div class="teacher-sec-label">????</div>
+      <div class="teacher-sec-label">文字長度</div>
       <div class="teacher-toggle-group" id="read-options-group"></div>
     </div>
     <div class="teacher-sec">
-      <div class="teacher-sec-label">????????????</div>
+      <div class="teacher-sec-label">全班同一種子（隨機序號）</div>
       <input class="input-seed" id="seed-input-box" value="langqiao-01">
     </div>
   </div>
@@ -42,11 +42,11 @@
 <div id="screen-role" class="screen">
   <div class="role-container">
     <div style="display:flex; justify-content:flex-start;">
-      <button class="btn-secondary" id="btn-role-back" style="padding:10px 18px; font-size:15px;">? ???</button>
+      <button class="btn-secondary" id="btn-role-back" style="padding:10px 18px; font-size:15px;">← 回首頁</button>
     </div>
     <div class="role-header">
-      <h2>?????</h2>
-      <p>??????????????????????????????</p>
+      <h2>你想當誰？</h2>
+      <p>三個人住的地方不一樣、認識的人不一樣，所以能做的事也不一樣。</p>
     </div>
     <div class="role-grid" id="role-cards-container"></div>
   </div>
@@ -54,82 +54,74 @@
 
 <!-- GAME MAIN SCREEN -->
 <div id="screen-game" class="screen">
-  <!-- Decorative background elements -->
-  <div class="world-deco" style="left:4%; top:16%; font-size:72px;">??</div>
-  <div class="world-deco" style="left:13%; top:20%; font-size:52px;">??</div>
+  <div class="world-deco" style="left:4%; top:16%; font-size:72px;">⛰️</div>
+  <div class="world-deco" style="left:13%; top:20%; font-size:52px;">⛰️</div>
   <div id="world-trees-container"></div>
   <div id="world-fields-container"></div>
   <div id="river"></div>
 
-  <!-- Interactive Map Nodes -->
   <div class="map-canvas-area" id="map-canvas-area">
     <div id="map-nodes-container"></div>
   </div>
 
-  <!-- Top status bar -->
   <div class="top-status-bar">
     <div class="top-role-info">
-      <span class="top-role-name" id="hud-role-name">????</span>
-      <span class="top-turn-season" id="hud-turn-info">? 1 / 10 ? ? ??</span>
+      <span class="top-role-name" id="hud-role-name">角色名稱</span>
+      <span class="top-turn-season" id="hud-turn-info">第 1 / 10 回 · 春天</span>
     </div>
     <div class="core-res-list" id="hud-core-resources"></div>
-    <button class="btn-home-small no-print" id="btn-game-to-home">?? ??</button>
+    <button class="btn-home-small no-print" id="btn-game-to-home">🏠 首頁</button>
   </div>
 
-  <!-- Left status chips -->
   <div class="left-status-chips" id="hud-left-status-chips"></div>
 
-  <!-- Right event panel -->
   <div class="right-event-panel" id="hud-right-event-panel">
     <div id="hud-delayed-notice-box"></div>
     <div class="ev-tag-row" id="hud-ev-tags"></div>
     <div class="ev-scene-box" id="hud-ev-scene"></div>
-    <h3 class="ev-title-text" id="hud-ev-title">????</h3>
-    <p class="ev-body-text" id="hud-ev-body">??????</p>
+    <h3 class="ev-title-text" id="hud-ev-title">事件標題</h3>
+    <p class="ev-body-text" id="hud-ev-body">事件描述內容</p>
     <div class="ev-info-card" id="hud-ev-info-card"></div>
     <div class="relations-sec">
-      <div class="relations-sec-title">?? ???????</div>
+      <div class="relations-sec-title">🤝 大家和你的關係</div>
       <div id="hud-relations-list"></div>
-      <div class="rel-hint-sub">?????????</div>
+      <div class="rel-hint-sub">方格越紅＝吵得越兇</div>
     </div>
   </div>
 
-  <!-- Zone details panel -->
   <div class="zone-detail-panel" id="zone-detail-panel" style="display:none;">
     <div class="zone-detail-header">
-      <span class="zone-detail-icon" id="zone-glyph-icon">??</span>
+      <span class="zone-detail-icon" id="zone-glyph-icon">📍</span>
       <div class="zone-detail-info">
-        <span class="zone-detail-name" id="zone-title-name">??</span>
-        <span class="zone-detail-env" id="zone-env-desc">??</span>
+        <span class="zone-detail-name" id="zone-title-name">地點</span>
+        <span class="zone-detail-env" id="zone-env-desc">環境</span>
       </div>
-      <button class="zone-detail-close" id="btn-close-zone-panel">?</button>
+      <button class="zone-detail-close" id="btn-close-zone-panel">✕</button>
     </div>
-    <div class="zone-rights-title">??????????????</div>
+    <div class="zone-rights-title">這塊地，有這些人都說用得到：</div>
     <div id="zone-rights-list" style="display:flex; flex-direction:column; gap:6px;"></div>
   </div>
 
-  <!-- Bottom options bar -->
   <div class="bottom-options-bar" id="bottom-options-bar">
-    <div class="options-guide-pill">?? ????????????????????????????</div>
+    <div class="options-guide-pill">👇 選一張卡：現在要付的代價寫在下面，以後的事不一定會告訴你</div>
     <div class="options-cards-row" id="options-cards-row"></div>
   </div>
 
-  <!-- Feedback overlay modal -->
   <div class="feedback-overlay-backdrop" id="feedback-modal-overlay" style="display:none;">
     <div class="feedback-modal-box">
       <div class="fb-dialog-header">
-        <span class="fb-dialog-face" id="fb-modal-face">??</span>
+        <span class="fb-dialog-face" id="fb-modal-face">🤔</span>
         <div>
-          <div class="fb-dialog-chose-title">???</div>
-          <div class="fb-dialog-chose-val" id="fb-modal-choice">????</div>
+          <div class="fb-dialog-chose-title">你選了</div>
+          <div class="fb-dialog-chose-val" id="fb-modal-choice">選項名稱</div>
         </div>
       </div>
       <p class="fb-dialog-narrative" id="fb-modal-narrative"></p>
       <div class="fb-dialog-deltas" id="fb-modal-deltas"></div>
       <div class="fb-dialog-missed" id="fb-modal-missed" style="display:none;"></div>
       <div class="fb-dialog-actions">
-        <button class="btn-turn-next" id="btn-advance-turn">? ????</button>
-        <button class="btn-reconsider-action no-print" id="btn-undo-reconsider" style="display:none;">? ???????????</button>
+        <button class="btn-turn-next" id="btn-advance-turn">→ 下一回合</button>
+        <button class="btn-reconsider-action no-print" id="btn-undo-reconsider" style="display:none;">↩ 再想一次（只能用一次）</button>
       </div>
     </div>
   </div>
@@ -138,15 +130,15 @@
 <!-- ENDING SCREEN -->
 <div id="screen-ending" class="screen">
   <div class="ending-modal-card">
-    <div class="ending-main-emoji" id="ending-glyph">??</div>
-    <div class="ending-turns-notice" id="ending-turns-count">10 ?????</div>
-    <h2 class="ending-title-text" id="ending-title-head">??????</h2>
+    <div class="ending-main-emoji" id="ending-glyph">🤝</div>
+    <div class="ending-turns-notice" id="ending-turns-count">10 回合結束了</div>
+    <h2 class="ending-title-text" id="ending-title-head">三方水源盟約</h2>
     <p class="ending-body-text" id="ending-body-desc"></p>
     <div class="ending-tags-wrap" id="ending-tags-container"></div>
     <div class="ending-reflection-card" id="ending-reflection-prompt"></div>
     <div class="ending-actions-row">
-      <button class="btn-primary" id="btn-view-decision-report">?? ???????</button>
-      <button class="btn-secondary" id="btn-ending-back-home">?? ???</button>
+      <button class="btn-primary" id="btn-view-decision-report">📜 看我的決定紀錄</button>
+      <button class="btn-secondary" id="btn-ending-back-home">🏠 回首頁</button>
     </div>
   </div>
 </div>
@@ -156,31 +148,31 @@
   <div class="report-paper-card">
     <div class="report-top-header">
       <div>
-        <div class="report-doc-badge">?? ??????</div>
-        <h2 class="report-doc-title">?????????????</h2>
+        <div class="report-doc-badge">📜 我的決定紀錄</div>
+        <h2 class="report-doc-title">風起瑯嶠：土地、水源與生存</h2>
       </div>
       <div class="report-meta-info" id="report-player-meta"></div>
     </div>
     <div class="stat-trends-grid" id="report-stats-grid"></div>
     <div>
-      <div class="report-sec-heading">??????</div>
+      <div class="report-sec-heading">我做過的決定</div>
       <div class="history-records-list" id="report-history-list"></div>
     </div>
     <div>
-      <div class="report-sec-heading">?????</div>
+      <div class="report-sec-heading">約定與吵架</div>
       <div style="font-size:15px; margin-bottom:4px;" id="report-agreements-text"></div>
       <div style="font-size:15px;" id="report-maxstage-text"></div>
     </div>
     <div>
-      <div class="report-sec-heading">???</div>
+      <div class="report-sec-heading">想一想</div>
       <div id="report-reflections-container"></div>
     </div>
     <div class="report-buttons-toolbar no-print">
-      <button class="btn-print-doc" id="btn-print-report">??? ????? PDF</button>
-      <button class="btn-normal-action" id="btn-export-save-json">?? ????</button>
-      <button class="btn-normal-action" id="btn-report-back-home">?? ???</button>
+      <button class="btn-print-doc" id="btn-print-report">🖨️ 列印／存成 PDF</button>
+      <button class="btn-normal-action" id="btn-export-save-json">⬇️ 匯出存檔</button>
+      <button class="btn-normal-action" id="btn-report-back-home">🏠 回首頁</button>
     </div>
-    <p class="report-footer-disclaimer">??????????????????????????????????</p>
+    <p class="report-footer-disclaimer">這份紀錄沒有姓名和學號。遊戲裡有歷史推論與假設，結果不等於真實歷史。</p>
   </div>
 </div>
 
