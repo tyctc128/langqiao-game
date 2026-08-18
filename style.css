@@ -4,8 +4,13 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
 button:disabled { opacity: 0.45; cursor: not-allowed !important; transform: none !important; }
 a { color: #1d6fb8; text-decoration: none; }
 a:hover { color: #c2521f; }
-.screen { display: none; }
-.screen.active { display: block; }
+
+.screen { display: none !important; }
+.screen.active { display: block !important; }
+#screen-home.active { display: flex !important; }
+#screen-ending.active { display: flex !important; }
+#screen-report.active { display: flex !important; }
+
 @keyframes bob { 0%, 100% { transform: translate(-50%, -50%) translateY(0); } 50% { transform: translate(-50%, -50%) translateY(-7px); } }
 @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -14,7 +19,7 @@ a:hover { color: #c2521f; }
 #screen-home {
   min-height: 100vh;
   background: linear-gradient(180deg, #9fd8f5 0%, #c8ecff 34%, #6fc0e8 42%, #8fd06a 48%, #63b356 100%);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 40px 20px; text-align: center;
+  flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 40px 20px; text-align: center;
 }
 .home-emoji-row { display: flex; align-items: flex-end; gap: 12px; font-size: 54px; line-height: 1; margin-bottom: 6px; }
 .home-title { font-size: 50px; font-weight: 900; color: #123; letter-spacing: 0.04em; text-shadow: 0 3px 0 rgba(255,255,255,0.6); margin-bottom: 4px; }
@@ -296,7 +301,7 @@ a:hover { color: #c2521f; }
 #screen-ending {
   min-height: 100vh;
   background: linear-gradient(180deg, #9fd8f5 0%, #cdeeff 42%, #8fd06a 56%, #63b356 100%);
-  display: flex; align-items: center; justify-content: center; padding: 36px 20px;
+  align-items: center; justify-content: center; padding: 36px 20px;
 }
 .ending-modal-card {
   width: min(680px, 95vw); background: #fff; border-radius: 24px; padding: 32px 28px;
@@ -319,7 +324,7 @@ a:hover { color: #c2521f; }
 
 /* ===== REPORT SCREEN ===== */
 #screen-report {
-  min-height: 100vh; background: #eaf4f8; padding: 36px 16px 60px; display: flex; justify-content: center;
+  min-height: 100vh; background: #eaf4f8; padding: 36px 16px 60px; justify-content: center;
 }
 .report-paper-card {
   width: min(840px, 100%); background: #fff; border-radius: 22px; padding: 34px 28px;
